@@ -28,10 +28,10 @@ def on_message_leave(client, userdata, message):
     nodes.remove(leave_ID)
     payload = str(ID)
     client.publish("rsv/leave_response", payload)
-    print(nodes)
+    #print(nodes)
 
 def on_message_leave_response(client, userdata, message):
-    if(leaving):
+    if(leaving and int(message.payload.decode("utf-8")) != ID):
         nodes_leave_ack.append(int(message.payload.decode("utf-8")))
 
 def on_message_join_response(client, userdata, message):
@@ -91,6 +91,7 @@ client.loop_start()
 client.subscribe("rsv/join")
 client.subscribe("rsv/join_response")
 client.subscribe("rsv/leave")
+client.subscribe("rsv/leave_response")
 client.subscribe("rsv/start")
 client.subscribe("rsv/put")
 client.subscribe("rsv/get")
@@ -102,10 +103,11 @@ client.message_callback_add('rsv/leave_response', on_message_leave_response)
 client.publish("rsv/join", ID)
 print("Just published " + str(ID) + " to topic rsv/join")
 
-time.sleep(30000)
+time.sleep(30)
 payload = str(ID)
 leaving = True
 client.publish("rsv/leave", payload)
+#nodes_leave_ack.remove(ID)
 
 while(nodes_leave_ack != nodes):
     time.sleep(5)
