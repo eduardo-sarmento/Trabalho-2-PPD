@@ -4,6 +4,8 @@ import time
 
 DHT = {}
 nodes = []
+nodes_leave_ack = []
+leaving = False
 ID = randint(0, (2**32)-1)
     
 mqttBroker ="127.0.0.1"
@@ -24,7 +26,13 @@ def on_message_leave(client, userdata, message):
     leave_ID = int(message.payload.decode("utf-8"))
     print("left: " ,leave_ID)
     nodes.remove(leave_ID)
+    payload = str(ID)
+    client.publish("rsv/leave_response", payload)
     print(nodes)
+
+def on_message_leave_response(client, userdata, message):
+    if(leaving):
+        nodes_leave_ack.append(int(message.payload.decode("utf-8")))
 
 def on_message_join_response(client, userdata, message):
 
@@ -59,6 +67,7 @@ def on_message_put(client, userdata, message):
         return
     print("Put sucessful: key=", key, "myID=", ID, "myIndex=", index, "prevID", nodes[index-1])
     client.publish("rsv/put_ok", ID)
+
 def on_message_get(client, userdata, message):
     key = int(message.payload.decode("utf-8"))
 
@@ -89,10 +98,19 @@ client.message_callback_add('rsv/join', on_message_join)
 client.message_callback_add('rsv/join_response', on_message_join_response)
 client.message_callback_add('rsv/start', on_message_start)
 client.message_callback_add('rsv/leave', on_message_leave)
+client.message_callback_add('rsv/leave_response', on_message_leave_response)
 client.publish("rsv/join", ID)
 print("Just published " + str(ID) + " to topic rsv/join")
 
-time.sleep(90)
+time.sleep(30000)
 payload = str(ID)
+leaving = True
 client.publish("rsv/leave", payload)
+
+while(nodes_leave_ack != nodes):
+    time.sleep(5)
+
+for key in DHT:
+    client.publish("rsv/put",  payload=str(key)+","+str(key))
+
 client.loop_stop()
