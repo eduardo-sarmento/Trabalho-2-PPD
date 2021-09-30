@@ -1,3 +1,4 @@
+from platform import node
 import paho.mqtt.client as mqtt
 from random import randrange, randint
 import time
@@ -50,8 +51,9 @@ def on_message_leave(client, userdata, message):
 # O no que esta saindo lista todos que respondem a sua mensagem de saida
 # Quando todos os nos responderem, ele pode efetivamente sair!
 def on_message_leave_response(client, userdata, message):
-    if(leaving and int(message.payload.decode("utf-8")) != ID):
+    if(leaving and int(message.payload.decode("utf-8")) != ID and not int(message.payload.decode("utf-8")) in nodes_leave_ack):
         nodes_leave_ack.append(int(message.payload.decode("utf-8")))
+        nodes_leave_ack.sort()
 
 # Transferencia de responsabilidade 
 # Popula o novo no com a parcela da DHT que compete a ele
@@ -146,7 +148,7 @@ client.publish("rsv/join", ID)
 print("Just published " + str(ID) + " to topic rsv/join")
 
 # O no precisa sair alguma hora, entao depois de 30 segundos ele da o sinal de saida
-time.sleep(60)
+time.sleep(15)
 leaving = True
 print("I'm leaving!")
 client.unsubscribe("rsv/put")
@@ -160,6 +162,15 @@ client.publish("rsv/leave", payload)
 # Espera todos os nos reconhecerem a sua saida
 # Depois, transfere a parcela da DHT deste no para o sucessor (i.e. no seguinte)
 while(nodes_leave_ack != nodes):
+    print(ID, "trying to leave!")
+    print("nodes ack:")
+    print(nodes_leave_ack)
+    print("nodes:")
+    print(nodes)
+    if(len(nodes_leave_ack) > len(nodes)):
+        for i in nodes_leave_ack:
+            if(i not in nodes):
+                nodes_leave_ack.remove(i)
     time.sleep(1)
 transfer_on_leave()
 print(ID, " left!")
