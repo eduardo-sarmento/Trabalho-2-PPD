@@ -106,7 +106,7 @@ def on_message_get(client, userdata, message):
     client.publish("rsv/get_ok", val)
 
 # Quando um no sai, ele precisa transferir sua responsabilidade
-# Transfere a DHT inteira do no para o novo responsavel (i.e. no seguinte)
+# Transfere a DHT do no para o novo responsavel (i.e. no seguinte)
 def transfer_on_leave():
     for key in DHT:
         client.publish("rsv/put",  payload=str(key)+","+str(key))
