@@ -18,14 +18,14 @@ def on_message(client, userdata, message):
 # O novo no eh adicionado por todos os outros, que enviam uma confirmacao de recebimento
 # O antigo no responsavel entrega ao novo no a parcela da DHT que compete a ele
 def on_message_join(client, userdata, message):
-    print("joined: " ,str(message.payload.decode("utf-8")))
+    print("Joined: " ,str(message.payload.decode("utf-8")))
     join_ID = int(message.payload.decode("utf-8"))
     nodes.append(join_ID)
     nodes.sort()
     payload = str(ID)
     client.publish("rsv/join_response", payload)
     index = nodes.index(ID)
-    if(join_ID == nodes[index-1]):
+    if(join_ID == nodes[index-1] and len(nodes) > 1):
         transfer_on_join(nodes[(index-2)%len(nodes)],join_ID)
 
 
@@ -43,6 +43,8 @@ def on_message_join_response(client, userdata, message):
 def on_message_leave(client, userdata, message):
     leave_ID = int(message.payload.decode("utf-8"))
     print(leave_ID, " is leaving!")
+    successor = nodes[(nodes.index(leave_ID)+1) % len(nodes)]
+    print("Node ", successor, " will inherit it's part of DHT.")
     nodes.remove(leave_ID)
     payload = str(ID)
     client.publish("rsv/leave_response", payload)
@@ -79,13 +81,10 @@ def on_message_put(client, userdata, message):
     randomNumber = int(info[1])
     index = nodes.index(ID)
     if(ID == nodes[0] and (key <= ID or key > nodes[-1])):
-        #print("aqui ID == nodes[0]")
         DHT[key] = randomNumber
     elif(key <= ID and key > nodes[index-1]):
-        #print("aqui key <= ID ")
         DHT[key] = randomNumber
     else:
-        #print("aqui else")
         return
     print("Put successful: key=", key, "myID=", ID, "myIndex=", index)
     client.publish("rsv/put_ok", ID)
@@ -116,10 +115,17 @@ def transfer_on_leave():
 # Quando um no entra, ele precisa ser encarregado de uma parcela da DHT
 # Transfere uma parte da DHT do no para o novo responsavel (i.e. no anterior)
 def transfer_on_join(previous_ID, join_ID):
-    for key in list(DHT):
-        if(key > previous_ID and key <= join_ID):
-            client.publish("rsv/forceput",  payload=str(join_ID)+","+str(key)+","+str(key))
-            del DHT[key]
+    print(join_ID, " JOINED, and is inheriting a fraction of ", ID, " DHT!")
+    if(join_ID != nodes[0]):
+        for key in list(DHT):
+            if(key > previous_ID and key <= join_ID):
+                client.publish("rsv/forceput",  payload=str(join_ID)+","+str(key)+","+str(key))
+                del DHT[key]
+    else:
+        for key in list(DHT):
+            if(key <= join_ID or key > nodes[-1]):
+                client.publish("rsv/forceput",  payload=str(join_ID)+","+str(key)+","+str(key))
+                del DHT[key]
 
 
 ### INICIALIZACAO DO NO DHT###
@@ -147,8 +153,8 @@ client.message_callback_add('rsv/get', on_message_get)
 client.publish("rsv/join", ID)
 print("Just published " + str(ID) + " to topic rsv/join")
 
-# O no precisa sair alguma hora, entao depois de 30 segundos ele da o sinal de saida
-time.sleep(15)
+# O no precisa sair alguma hora, entao depois de 60 segundos ele da o sinal de saida
+time.sleep(60)
 leaving = True
 print("I'm leaving!")
 client.unsubscribe("rsv/put")
@@ -162,16 +168,11 @@ client.publish("rsv/leave", payload)
 # Espera todos os nos reconhecerem a sua saida
 # Depois, transfere a parcela da DHT deste no para o sucessor (i.e. no seguinte)
 while(nodes_leave_ack != nodes):
-    print(ID, "trying to leave!")
-    print("nodes ack:")
-    print(nodes_leave_ack)
-    print("nodes:")
-    print(nodes)
     if(len(nodes_leave_ack) > len(nodes)):
         for i in nodes_leave_ack:
             if(i not in nodes):
                 nodes_leave_ack.remove(i)
     time.sleep(1)
 transfer_on_leave()
-print(ID, " left!")
+print(ID, " terminated!")
 client.loop_stop()

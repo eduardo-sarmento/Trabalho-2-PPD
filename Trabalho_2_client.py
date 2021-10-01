@@ -12,13 +12,13 @@ def on_message(client, userdata, message):
 # Confirma que a operacao foi efetuada com sucesso
 def on_message_put_ok(client, userdata, message):
     dht_node_id = int(message.payload.decode("utf-8"))
-    print("put OK! Node ID: ", dht_node_id)
+    print("PUT OK! Node ID: ", dht_node_id)
 
 # Resposta ao GET
 # Confirma que a operacao foi efetuada com sucesso
 def on_message_get_ok(client, userdata, message):
     stored_value = int(message.payload.decode("utf-8"))
-    print("get OK! Stored value: ", stored_value)
+    print("GET OK! Stored value: ", stored_value)
 
 # INICIALIZACAO DO CLIENTE #
 client = mqtt.Client("Node_Client_" + str(ID))
@@ -35,7 +35,7 @@ client.message_callback_add('rsv/get_ok', on_message_get_ok)
 # Obs: Para manter a simplicidade, todos os elementos da DHT tem o mesmo valor que a chave
 while True:
     randNumber = randint(0, (2**8)-1)
-    print(randNumber)
+    print("GENERATED: ", randNumber)
     client.publish("rsv/put",  payload=str(randNumber)+","+str(randNumber))
     client.publish("rsv/get", randNumber)
     time.sleep(10)
