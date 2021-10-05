@@ -2,6 +2,7 @@ from platform import node
 import paho.mqtt.client as mqtt
 from random import randrange, randint
 import time
+import atexit
 
 DHT = {}
 nodes = []
@@ -127,11 +128,35 @@ def transfer_on_join(previous_ID, join_ID):
                 client.publish("rsv/forceput",  payload=str(join_ID)+","+str(key)+","+str(key))
                 del DHT[key]
 
+def exit_handler():
+    leaving = True
+    print("I'm leaving!")
+    client.unsubscribe("rsv/put")
+    client.unsubscribe("rsv/get")
+    client.unsubscribe("rsv/join")
+    client.unsubscribe("rsv/join_response")
+    client.unsubscribe("rsv/forceput")
+    payload = str(ID)
+    client.publish("rsv/leave", payload)
+
+    # Espera todos os nos reconhecerem a sua saida
+    # Depois, transfere a parcela da DHT deste no para o sucessor (i.e. no seguinte)
+    while(nodes_leave_ack != nodes):
+        if(len(nodes_leave_ack) > len(nodes)):
+            for i in nodes_leave_ack:
+                if(i not in nodes):
+                    nodes_leave_ack.remove(i)
+        time.sleep(1)
+    transfer_on_leave()
+    print(ID, " terminated!")
+    client.loop_stop()
 
 ### INICIALIZACAO DO NO DHT###
 client = mqtt.Client("Node_" + str(ID))
 client.connect(mqttBroker)
 client.loop_start()
+
+atexit.register(exit_handler)
 
 # Assina mensagens necessarias p/ funcionamento
 client.subscribe("rsv/join")
@@ -153,26 +178,8 @@ client.message_callback_add('rsv/get', on_message_get)
 client.publish("rsv/join", ID)
 print("Just published " + str(ID) + " to topic rsv/join")
 
-# O no precisa sair alguma hora, entao depois de 60 segundos ele da o sinal de saida
-time.sleep(60)
-leaving = True
-print("I'm leaving!")
-client.unsubscribe("rsv/put")
-client.unsubscribe("rsv/get")
-client.unsubscribe("rsv/join")
-client.unsubscribe("rsv/join_response")
-client.unsubscribe("rsv/forceput")
-payload = str(ID)
-client.publish("rsv/leave", payload)
+# O no precisa sair alguma hora, entao depois de 80 segundos ele da o sinal de saida
+time.sleep(80)
 
-# Espera todos os nos reconhecerem a sua saida
-# Depois, transfere a parcela da DHT deste no para o sucessor (i.e. no seguinte)
-while(nodes_leave_ack != nodes):
-    if(len(nodes_leave_ack) > len(nodes)):
-        for i in nodes_leave_ack:
-            if(i not in nodes):
-                nodes_leave_ack.remove(i)
-    time.sleep(1)
-transfer_on_leave()
-print(ID, " terminated!")
-client.loop_stop()
+# Executa rotina de saída
+exit_handler()

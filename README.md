@@ -3,7 +3,7 @@ Trabalho 1.3 - Processamento Paralelo e Distribuído
 Professor: Rodolfo da Silva Villaca
 Grupo : Eduardo Sarmento e Pedro Paternostro
 
-Para a execução do programa, basta executar o arquivo Trabalho_2_dht.py e Trabalho_2_client.py em quantos terminais desejar, não há limite de instâncias para nenhum dos dois.
+Para a execução do programa, basta executar o arquivo Trabalho_2_dht.py e Trabalho_2_client.py em quantos terminais desejar, não há limite de instâncias para nenhum dos dois. Os nós da DHT executam durante 80 segundos, depois fecham automaticamente. Caso o usuário deseje encerrar o nó antes, poderá fechar o programa e o nó sairá imediatamente.
 
 A implementação do trabalho encontra-se excepcionalmente comentada, em adição a isso, ao executar o trabalho cada programa imprime dicas do estado em que se encontra e de mudanças que ocorrem, para que o usuário entenda com clareza tudo o que está sendo feito.
 
