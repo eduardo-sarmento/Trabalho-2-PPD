@@ -7,7 +7,7 @@ DHT = {}
 nodes = []
 nodes_leave_ack = []
 leaving = False
-ID = randint(0, (2**8)-1)
+ID = randint(0, (2**32)-1)
     
 mqttBroker ="127.0.0.1"
 

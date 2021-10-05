@@ -3,7 +3,7 @@ from random import randrange, randint
 import time
 
 mqttBroker = "127.0.0.1" 
-ID = randint(0, (2**8)-1)
+ID = randint(0, (2**32)-1)
 
 def on_message(client, userdata, message):
     print("received message: " ,str(message.payload.decode("utf-8")))
@@ -34,7 +34,7 @@ client.message_callback_add('rsv/get_ok', on_message_get_ok)
 # Enquanto estiver funcionando, gera numeros aleatorios e utiliza PUT e GET
 # Obs: Para manter a simplicidade, todos os elementos da DHT tem o mesmo valor que a chave
 while True:
-    randNumber = randint(0, (2**8)-1)
+    randNumber = randint(0, (2**32)-1)
     print("GENERATED: ", randNumber)
     client.publish("rsv/put",  payload=str(randNumber)+","+str(randNumber))
     client.publish("rsv/get", randNumber)
