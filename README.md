@@ -10,7 +10,7 @@ O formato da mensagem para inserir um numero na DHT é numero inteiro entre 0 e 
 
 O formato da mensagem para fazer o get de um numero na DHT é numero inteiro entre 0 e 2^32-1 em formato de int
 
-Para a execução do programa, basta executar o arquivo Trabalho_2_dht.py e Trabalho_2_client.py em quantos terminais desejar, não há limite de instâncias para nenhum dos dois. Os nós da DHT executam durante 80 segundos, depois fecham automaticamente.
+Para a execução do programa, basta executar o arquivo Trabalho_2_dht.py, sendo que este arquivo recebe um argumento que deve ser um numero inteiro que dita a quantidade de tempo que o nó da DHT estara funcionando, e Trabalho_2_client.py em quantos terminais desejar, não há limite de instâncias para nenhum dos dois. Os nós da DHT executam durante 80 segundos, depois fecham automaticamente.
 
 A implementação do trabalho encontra-se excepcionalmente comentada, em adição a isso, ao executar o trabalho cada programa imprime dicas do estado em que se encontra e de mudanças que ocorrem, para que o usuário entenda com clareza tudo o que está sendo feito.
 
