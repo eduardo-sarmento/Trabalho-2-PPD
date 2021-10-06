@@ -2,6 +2,7 @@ from platform import node
 import paho.mqtt.client as mqtt
 from random import randrange, randint
 import time
+import sys
 
 DHT = {}
 nodes = []
@@ -127,6 +128,7 @@ def transfer_on_join(previous_ID, join_ID):
                 client.publish("rsv/forceput",  payload=str(join_ID)+","+str(key)+","+str(key))
                 del DHT[key]
 
+
 ### INICIALIZACAO DO NO DHT###
 client = mqtt.Client("Node_" + str(ID))
 client.connect(mqttBroker)
@@ -152,8 +154,13 @@ client.message_callback_add('rsv/get', on_message_get)
 client.publish("rsv/join", ID)
 print("Just published " + str(ID) + " to topic rsv/join")
 
-# O no precisa sair alguma hora, entao depois de 80 segundos ele da o sinal de saida
-time.sleep(80)
+# O no precisa sair alguma hora, entao vindo dos argumentos do programa temos o periodo de tempo que o nó da dht vai rodar, este periodo deve ser um numero inteiro por isso o try catch
+try:
+    time.sleep(int(sys.argv[1]))
+except Exception:
+    print("O tempo de execução do nó da DHT deve ser um numero inteiro")
+    exit(1)
+
 
 # Executa rotina de saída
 leaving = True
